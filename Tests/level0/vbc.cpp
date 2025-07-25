@@ -1,85 +1,112 @@
-#include <stdio.h>
-#include <unistd.h>
 #include <ctype.h>
+#include <unistd.h>
+#include <stdio.h>
 
-//curChar for current charrachter
-const char *input;
+const char* input;
 char currChar;
 int err = 0;
 
-void next() { currChar = *input ? *input++ : 0; }
-int expr(void);
+void	next(){ currChar = *input ? *input++ : 0;	}
+int expr();
 
-void fail_end()
+
+void	err_fail()
 {
-	write(2, "Unexpected end of input\n", 24);
+	write(1, "Unexpected end of input\n", 24);
 	err = 1;
 }
 
-void fail_token()
+void	err_token()
 {
-	write(2, "Unexpected token '", 18);
-	write(2, &currChar, 1);
-	write(2, "'\n", 2);
+	write(1, "Unexpected token '", 18);
+	write(1, &currChar, 1);
+	write(1, "'\n", 2);
 	err = 1;
 }
 
-int factor(void)
+
+int	factor()
 {
-    if (err) return 1;
-    
+	if(err) return 1;
+
 	if (isdigit(currChar))
 	{
-        int v = currChar - '0';
-        next();
-        return v;
-    }
+		int v = currChar - '0';
+		next();
+		return v;
+	}
 
-	if (currChar == '(')
-	{
-        next();
-        int v = expr();
-        if (currChar != ')') fail_end();
-        next();
-        return v;
-    }
-
-	if (currChar == 0)
-		return fail_end(), 1;
-
-	return fail_token(), 1;
-}
-
-int term(void) {
-    int v = factor();
-    while (!err && currChar == '*')
-	{
-        next();
-        v *= factor();
-    }
-    return v;
-}
-
-int expr(void)
-{
-    int v = term();
-    while (!err && currChar == '+')
+	if(currChar == '(')
 	{
 		next();
-		v += term();
-    }
+		int v  = expr();
+		
+		if (currChar != ')') return err_token(), 1;
+
+		next();
+		return v;
+
+	}
+
+
+	if (currChar == 0)
+		return err_fail(), 1;
+
+	return err_token(), 1;
+}
+
+int term()
+{
+	int v = factor();
+	
+	while (!err && currChar == '*')
+	{
+		next();
+		v *= factor();
+	
+	}
 	return v;
 }
 
-int main(int ac, char **av)
+
+int expr()
 {
-	if (ac != 2) return 1;
-	input = av[1];
+	int v = term();
+	
+	while (!err && currChar == '+')
+	{
+		next();
+		v += term();
+	
+	}
+	return v;
+}
+
+int main(int argc, char** argv)
+{
+	if (argc != 2) return 1;
+
+	input = argv[1];
+
 	next();
 	int result = expr();
-	if (!err && currChar) return fail_token(), 1;
+	
+	if (err == 0 && currChar) return err_fail(), 1;
 
-	if (err) return 1;
+	if (err == 1)	return 1;
+
 	printf("%d\n", result);
+
+
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
